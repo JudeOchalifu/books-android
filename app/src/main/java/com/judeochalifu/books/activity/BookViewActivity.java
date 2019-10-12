@@ -6,7 +6,7 @@ import android.os.Bundle;
 
 import com.judeochalifu.books.R;
 
-public class BookViewActivity extends AppCompatActivity {
+public class BookViewActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

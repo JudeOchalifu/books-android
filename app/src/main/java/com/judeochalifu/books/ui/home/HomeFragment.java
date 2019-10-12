@@ -27,47 +27,71 @@ import java.util.List;
 
 public class HomeFragment extends Fragment {
 
-    private HomeViewModel homeViewModel;
-    private RecyclerView booksRecyclerView;
-    private BookListAdapter bookListAdapter;
-    private SwipeRefreshLayout swipeRefreshLayout;
+  private HomeViewModel homeViewModel;
+  private RecyclerView booksRecyclerView;
+  private BookListAdapter bookListAdapter;
+  private SwipeRefreshLayout swipeRefreshLayout;
 
 
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
-        homeViewModel =
-                ViewModelProviders.of(this).get(HomeViewModel.class);
-        View root = inflater.inflate(R.layout.fragment_home, container, false);
-        booksRecyclerView = root.findViewById(R.id.bookListRecyclerView);
-        swipeRefreshLayout = root.findViewById(R.id.swipeRefreshLayout);
-        getBooks();
-        return root;
-    }
+  public View onCreateView(@NonNull LayoutInflater inflater,
+                           ViewGroup container, Bundle savedInstanceState) {
+    homeViewModel =
+      ViewModelProviders.of(this).get(HomeViewModel.class);
+    View root = inflater.inflate(R.layout.fragment_home, container, false);
+    booksRecyclerView = root.findViewById(R.id.bookListRecyclerView);
 
-    private void getBooks() {
-        swipeRefreshLayout.setRefreshing(true);
-        homeViewModel.getBooks().observe(this, new Observer<List<Book>>() {
-            @Override
-            public void onChanged(@Nullable List<Book> bookList) {
-                swipeRefreshLayout.setRefreshing(false);
-                buildRecyclerView(bookList);
-
-            }
-        });
-    }
-
-    private void buildRecyclerView(List<Book> bookList) {
-        bookListAdapter = new BookListAdapter(bookList);
-        if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            booksRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        } else {
-            booksRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 4));
-
+    swipeRefreshLayout = root.findViewById(R.id.swipeRefreshLayout);
+    swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+      @Override
+      public void onRefresh() {
+        if (homeViewModel.getBooks().hasActiveObservers()) {
+          swipeRefreshLayout.setRefreshing(false);
         }
-        booksRecyclerView.setItemAnimator(new DefaultItemAnimator());
-        booksRecyclerView.setAdapter(bookListAdapter);
-        bookListAdapter.notifyDataSetChanged();
+      }
+    });
+    getBooks();
+    return root;
+  }
 
+  private void getBooks() {
+    swipeRefreshLayout.setRefreshing(true);
+    homeViewModel.getBooks().observe(this, new Observer<List<Book>>() {
+      @Override
+      public void onChanged(@Nullable List<Book> bookList) {
+        swipeRefreshLayout.setRefreshing(false);
+        buildRecyclerView(bookList);
+
+      }
+    });
+  }
+
+  private void buildRecyclerView(List<Book> bookList) {
+    bookListAdapter = new BookListAdapter(bookList, getActivity());
+    if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+      booksRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+    } else {
+      booksRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 4));
 
     }
+    booksRecyclerView.setItemAnimator(new DefaultItemAnimator());
+    booksRecyclerView.setAdapter(bookListAdapter);
+    bookListAdapter.notifyDataSetChanged();
+
+
+  }
+
+
+
+  @Override
+  public void onStop() {
+    super.onStop();
+  }
+
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    if (homeViewModel != null) {
+      homeViewModel.onCleared();
+    }
+  }
 }

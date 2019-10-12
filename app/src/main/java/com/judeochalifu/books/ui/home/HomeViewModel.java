@@ -30,73 +30,82 @@ import java.util.List;
 
 public class HomeViewModel extends AndroidViewModel {
 
+  private RequestQueue requestQueue;
 
-    private MutableLiveData<List<Book>> books;
-    private static final String TAG = HomeViewModel.class.getSimpleName();
-    private Context applicationContext;
+  private MutableLiveData<List<Book>> books;
+  private StringRequest stringRequest;
+  private static final String TAG = HomeViewModel.class.getSimpleName();
+  private Context applicationContext;
+  private String REQUEST_QUEUE_TAG = "Book List Request Queue";
 
-    public HomeViewModel(@NonNull Application application) {
-        super(application);
-        this.applicationContext = application.getApplicationContext();
-        getBooks();
+  public HomeViewModel(@NonNull Application application) {
+    super(application);
+    this.applicationContext = application.getApplicationContext();
+    getBooks();
+  }
+
+
+  public LiveData<List<Book>> getBooks() {
+    if (books == null) {
+      books = new MutableLiveData<List<Book>>();
+      getListOfBooks();
     }
+    return books;
+  }
 
+  private void getListOfBooks() {
 
+    requestQueue = Volley.newRequestQueue(applicationContext);
 
-    public LiveData<List<Book>> getBooks() {
-        if (books == null) {
-            books = new MutableLiveData<List<Book>>();
-            getListOfBooks();
-        }
-        return books;
-    }
+    String url = "http://192.168.1.121:8079/books/all";
 
-    private void getListOfBooks() {
+    stringRequest = new StringRequest(Request.Method.GET, url,
+      new Response.Listener<String>() {
+        @Override
+        public void onResponse(String response) {
 
-        RequestQueue queue = Volley.newRequestQueue(applicationContext);
-        String url = "http://192.168.1.138:8079/books/all";
+          try {
+            JSONArray booksJsonArray = new JSONArray(response);
+            Log.e(TAG, "Length of array: " + booksJsonArray.length());
+            List<Book> bookList = new ArrayList<>();
+            for (int i = 0; i < booksJsonArray.length(); i++) {
+              JSONObject bookJsonObj = booksJsonArray.getJSONObject(i);
+              Book book = new Book();
+              book.setTitle(bookJsonObj.getString("title"));
+              book.setSubtitle(bookJsonObj.getString("subtitle"));
+              book.setIsbn13(bookJsonObj.getString("isbn13"));
+              book.setPrice(bookJsonObj.getString("price"));
+              book.setImage(bookJsonObj.getString("image"));
+              book.setUrl(bookJsonObj.getString("url"));
 
-
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-
-                        try {
-                            JSONArray booksJsonArray = new JSONArray(response);
-                            Log.e(TAG, "Length of array: " + booksJsonArray.length());
-                            List<Book> bookList = new ArrayList<>();
-                            for (int i = 0; i < booksJsonArray.length(); i++) {
-                                JSONObject bookJsonObj = booksJsonArray.getJSONObject(i);
-                                Book book = new Book();
-                                book.setTitle(bookJsonObj.getString("title"));
-                                book.setSubtitle(bookJsonObj.getString("subtitle"));
-                                book.setIsbn13(bookJsonObj.getString("isbn13"));
-                                book.setPrice(bookJsonObj.getString("price"));
-                                book.setImage(bookJsonObj.getString("image"));
-                                book.setUrl(bookJsonObj.getString("url"));
-
-                                bookList.add(book);
-                                books.setValue(bookList);
-                            }
-                        } catch (Exception exception) {
-                            Log.e(TAG, exception.getMessage());
-                        }
-
-
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "An error occurred while retrieving data: cause \n" + error.getMessage());
-                Log.e(TAG, "An error occurred while retrieving data: cause \n" + error.getCause());
-                Log.e(TAG, "An error occurred while retrieving data: cause \n" + error.getLocalizedMessage());
+              bookList.add(book);
+              books.setValue(bookList);
             }
-        });
+          } catch (Exception exception) {
+            Log.e(TAG, exception.getMessage());
+          }
 
 
-        queue.add(stringRequest);
+        }
+      }, new Response.ErrorListener() {
+      @Override
+      public void onErrorResponse(VolleyError error) {
+        Log.e(TAG, "An error occurred while retrieving data: cause \n" + error.getMessage());
+        Log.e(TAG, "An error occurred while retrieving data: cause \n" + error.getCause());
+        Log.e(TAG, "An error occurred while retrieving data: cause \n" + error.getLocalizedMessage());
+      }
+    });
 
+    stringRequest.setTag(REQUEST_QUEUE_TAG);
+    requestQueue.add(stringRequest);
+
+  }
+
+  @Override
+  protected void onCleared() {
+    super.onCleared();
+    if (requestQueue != null) {
+      requestQueue.cancelAll(REQUEST_QUEUE_TAG);
     }
-
+  }
 }
