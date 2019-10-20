@@ -16,6 +16,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -31,7 +32,7 @@ import java.util.List;
 public class HomeViewModel extends AndroidViewModel {
 
   private RequestQueue requestQueue;
-
+  private List<Book> retrievedBookList;
   private MutableLiveData<List<Book>> books;
   private StringRequest stringRequest;
   private static final String TAG = HomeViewModel.class.getSimpleName();
@@ -44,30 +45,28 @@ public class HomeViewModel extends AndroidViewModel {
     getBooks();
   }
 
-
   public LiveData<List<Book>> getBooks() {
     if (books == null) {
-      books = new MutableLiveData<List<Book>>();
-      getListOfBooks();
+      books = new MutableLiveData<>();
+      List<Book> temp = getListOfBooks();
     }
     return books;
   }
 
-  private void getListOfBooks() {
+  private List<Book> getListOfBooks() {
 
     requestQueue = Volley.newRequestQueue(applicationContext);
 
-    String url = "http://192.168.1.121:8079/books/all";
+    String url = "http://192.168.8.102:8079/books/all";
 
     stringRequest = new StringRequest(Request.Method.GET, url,
       new Response.Listener<String>() {
         @Override
         public void onResponse(String response) {
-
           try {
             JSONArray booksJsonArray = new JSONArray(response);
             Log.e(TAG, "Length of array: " + booksJsonArray.length());
-            List<Book> bookList = new ArrayList<>();
+            retrievedBookList = new ArrayList<>();
             for (int i = 0; i < booksJsonArray.length(); i++) {
               JSONObject bookJsonObj = booksJsonArray.getJSONObject(i);
               Book book = new Book();
@@ -78,9 +77,10 @@ public class HomeViewModel extends AndroidViewModel {
               book.setImage(bookJsonObj.getString("image"));
               book.setUrl(bookJsonObj.getString("url"));
 
-              bookList.add(book);
-              books.setValue(bookList);
+              retrievedBookList.add(book);
+              books.setValue(retrievedBookList);
             }
+
           } catch (Exception exception) {
             Log.e(TAG, exception.getMessage());
           }
@@ -99,6 +99,7 @@ public class HomeViewModel extends AndroidViewModel {
     stringRequest.setTag(REQUEST_QUEUE_TAG);
     requestQueue.add(stringRequest);
 
+    return retrievedBookList;
   }
 
   @Override

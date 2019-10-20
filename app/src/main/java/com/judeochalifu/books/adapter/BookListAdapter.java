@@ -46,8 +46,10 @@ public class BookListAdapter extends RecyclerView.Adapter<BookListAdapter.BookVi
 
     @Override
     public void onClick(View view) {
-      Log.d("TAG", "onClick " + getAdapterPosition());
-      context.startActivity(new Intent(context, BookViewActivity.class));
+      Intent navigationIntent = new Intent(context, BookViewActivity.class);
+      Book book = bookList.get(getAdapterPosition());
+      navigationIntent.putExtra("selectedBook", book);
+      context.startActivity(navigationIntent);
     }
   }
 

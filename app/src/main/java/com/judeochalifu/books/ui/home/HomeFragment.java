@@ -2,6 +2,7 @@ package com.judeochalifu.books.ui.home;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,9 +20,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.judeochalifu.books.R;
 import com.judeochalifu.books.adapter.BookListAdapter;
 import com.judeochalifu.books.model.Book;
+import com.judeochalifu.books.utility.EmptyRecyclerViewListener;
 
 import java.util.List;
 
@@ -31,13 +34,20 @@ public class HomeFragment extends Fragment {
   private RecyclerView booksRecyclerView;
   private BookListAdapter bookListAdapter;
   private SwipeRefreshLayout swipeRefreshLayout;
+  private View root;
+  private EmptyRecyclerViewListener emptyRecyclerViewListener;
 
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+
+  }
 
   public View onCreateView(@NonNull LayoutInflater inflater,
                            ViewGroup container, Bundle savedInstanceState) {
     homeViewModel =
       ViewModelProviders.of(this).get(HomeViewModel.class);
-    View root = inflater.inflate(R.layout.fragment_home, container, false);
+    root = inflater.inflate(R.layout.fragment_home, container, false);
     booksRecyclerView = root.findViewById(R.id.bookListRecyclerView);
 
     swipeRefreshLayout = root.findViewById(R.id.swipeRefreshLayout);
@@ -58,9 +68,14 @@ public class HomeFragment extends Fragment {
     homeViewModel.getBooks().observe(this, new Observer<List<Book>>() {
       @Override
       public void onChanged(@Nullable List<Book> bookList) {
-        swipeRefreshLayout.setRefreshing(false);
-        buildRecyclerView(bookList);
+        Log.e("TAG", "Book List: ================> " + bookList);
+        if (bookList == null) {
+          swipeRefreshLayout.setRefreshing(false);
 
+        } else {
+          swipeRefreshLayout.setRefreshing(false);
+          buildRecyclerView(bookList);
+        }
       }
     });
   }
@@ -76,10 +91,7 @@ public class HomeFragment extends Fragment {
     booksRecyclerView.setItemAnimator(new DefaultItemAnimator());
     booksRecyclerView.setAdapter(bookListAdapter);
     bookListAdapter.notifyDataSetChanged();
-
-
   }
-
 
 
   @Override
@@ -94,4 +106,6 @@ public class HomeFragment extends Fragment {
       homeViewModel.onCleared();
     }
   }
+
+
 }

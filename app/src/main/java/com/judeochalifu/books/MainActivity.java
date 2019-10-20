@@ -1,9 +1,12 @@
 package com.judeochalifu.books;
 
 import android.os.Bundle;
+import android.view.View;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.snackbar.Snackbar;
 import com.judeochalifu.books.activity.BaseActivity;
+import com.judeochalifu.books.utility.EmptyRecyclerViewListener;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
@@ -11,7 +14,7 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements EmptyRecyclerViewListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,4 +31,10 @@ public class MainActivity extends BaseActivity {
         NavigationUI.setupWithNavController(navView, navController);
     }
 
+  @Override
+  public void callback(View view, String message) {
+    Snackbar snackBar = Snackbar.make(findViewById(android.R.id.content),
+      "Could not retrieve content at this time", Snackbar.LENGTH_LONG);
+    snackBar.show();
+  }
 }

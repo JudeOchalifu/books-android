@@ -1,6 +1,8 @@
 package com.judeochalifu.books.model;
 
-public class Book {
+import java.io.Serializable;
+
+public class Book implements Serializable {
 
     private Long id;
     private String title;
